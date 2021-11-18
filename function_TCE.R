@@ -131,6 +131,40 @@ compute_daily_spat_mean<-function(daily_data,Ind_season){
   return(spavg_daily_data)
 }
 
+
+## More or less like Vautard2021: for each year, minimum of tas at each grid cell + mean
+compute_monthly_mean_of_mins<-function(data_month_array, nb_years=251){
+  nb_day_by_month=dim(data_month_array)[3]/nb_years
+  res=c()
+  for(k in 1:nb_years){
+    ### min in april for each year
+    tmp_min_by_gridcells<- apply(data_month_array[,,(1+(k-1)*30):(30+(k-1)*30)],c(1,2),min)
+    ### spatial mean of min by year
+    res=c(res, mean(tmp_min_by_gridcells, na.rm=TRUE))
+  }
+  return(res)
+} 
+    
+## Like Vautard: Solstice d'hiver for starting date
+compute_spat_mean_of_GDD<-function(data_array, nb_years=251){
+  nb_day_by_month=dim(data_array)[3]/nb_years
+  res=c()
+  for(k in 1:nb_years){
+    tmp_days=c(355:365,1:90)+365*(k-1)
+    #tmp_days=c(1:90)+365*(k-1)
+    vec_to_sum=data_array[,,tmp_days]-5
+    vec_to_sum[vec_to_sum<0]<-0
+    gdd=apply(vec_to_sum,c(1,2),cumsum)
+    ## Get mean of GDD at the end of March
+    #res_spatmean=mean(gdd[90,,],na.rm=T)
+    res_spatmean=mean(gdd[length(tmp_days),,],na.rm=T)
+    res=c(res, res_spatmean)
+  }
+  return(res)
+}
+
+
+
 #### Fit kernel and estimate its inverse
 F_Kernel<-function(data_x, points_to_estimate){
   pdf <- density(data_x)
